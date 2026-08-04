@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Token Tracker V2 synchronization every 10 minutes
+
+[Timer]
+OnCalendar=*:0/10
+Persistent=true
+RandomizedDelaySec=20
+Unit=token-tracker-sync.service
+
+[Install]
+WantedBy=timers.target

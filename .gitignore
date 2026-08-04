@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+backend/.env
+backend/sources.json
+backend/data/
+*.db
+*.db-*
+*.sqlite*
+*.log
+sync.lock
+.DS_Store
+.env
+.env.*
+!.env.example
+token-tracker-v2-settings.json

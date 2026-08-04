@@ -1,0 +1,22 @@
+[Unit]
+Description=Token Tracker V2 API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=token-tracker
+Group=token-tracker
+WorkingDirectory=/opt/token-tracker/backend
+EnvironmentFile=/opt/token-tracker/backend/.env
+ExecStart=/opt/token-tracker/.venv/bin/python /opt/token-tracker/backend/server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/token-tracker/backend/data
+
+[Install]
+WantedBy=multi-user.target

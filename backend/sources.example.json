@@ -1,0 +1,18 @@
+{
+  "relay_cookie": {
+    "label": "Cookie Relay",
+    "url": "https://relay.example.com/api/log/self",
+    "auth": "cookie",
+    "secret_env": "RELAY_COOKIE_SESSION",
+    "user_env": "RELAY_COOKIE_USER",
+    "default_user": ""
+  },
+  "relay_bearer": {
+    "label": "Bearer Relay",
+    "url": "https://api.example.com/api/log/self",
+    "auth": "bearer",
+    "secret_env": "RELAY_BEARER_TOKEN",
+    "user_env": "RELAY_BEARER_USER",
+    "default_user": ""
+  }
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=Synchronize Token Tracker V2 usage events
+
+[Service]
+Type=oneshot
+User=token-tracker
+Group=token-tracker
+WorkingDirectory=/opt/token-tracker/backend
+EnvironmentFile=/opt/token-tracker/backend/.env
+ExecStart=/opt/token-tracker/.venv/bin/python /opt/token-tracker/backend/sync.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/token-tracker/backend/data
