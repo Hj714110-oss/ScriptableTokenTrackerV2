@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
-TEXT_SUFFIXES = {".py", ".js", ".md", ".html", ".json", ".yml", ".yaml", ".service", ".timer", ".txt", ""}
+TEXT_SUFFIXES = {".py", ".js", ".md", ".html", ".json", ".yml", ".yaml", ".service", ".timer", ".txt", ".svg", ""}
 EXPECTED_WIDGETS = {
     "SetupTokenTrackerV2.js",
     "TokenOverviewV2.js",
@@ -20,8 +20,16 @@ EXPECTED_WIDGETS = {
     "ModelFocusV2.js",
     "UsageRhythmV2.js",
     "ActivityCacheV2.js",
+    "SetupTokenTrackerV3.js",
+    "TokenOverviewV3.js",
+    "ModelRankingV3.js",
+    "ModelFocusV3.js",
+    "UsageRhythmV3.js",
+    "ActivityCacheV3.js",
+    "CacheHealthV3.js",
+    "ResponsePulseV3.js",
 }
-ALLOWED_HOSTS = {"github.com", "scriptable.app", "img.shields.io", "example.com", "relay.example.com", "api.example.com", "your-domain.example", "127.0.0.1"}
+ALLOWED_HOSTS = {"github.com", "scriptable.app", "img.shields.io", "example.com", "relay.example.com", "api.example.com", "your-domain.example", "127.0.0.1", "www.w3.org"}
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>`)]+")
 IP_PATTERN = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 SECRETISH = re.compile(r"(?i)(?:api[_-]?key|access[_-]?token|secret|password|session|authorization)\s*[:=]\s*[\"']?([^\s\"',}]+)")
@@ -96,9 +104,12 @@ def scan_public_tree() -> None:
 
 def verify_demo_is_fictional() -> None:
     demo = (ROOT / "docs" / "demo-preview.html").read_text()
+    screen = (ROOT / "tools" / "v3-sanitized-screen.svg").read_text()
     markers = ["Fictional Demo Data", "虚构演示数据", "NO REAL USER DATA", "Synthetic Labs"]
     if not all(marker in demo for marker in markers):
         fail("demo preview is not explicitly marked as fictional")
+    if "ALL VALUES ARE FICTIONAL" not in screen or "PUBLIC DEMO ONLY" not in screen:
+        fail("V3 screen preview is not explicitly marked as fictional")
     print("PASS preview is explicitly fictional")
 
 
@@ -109,15 +120,20 @@ def verify_code() -> None:
     run([sys.executable, "-m", "py_compile", *[p.name for p in (ROOT / "backend").glob("*.py")]], ROOT / "backend")
     run([sys.executable, "test_v3.py"], ROOT / "backend")
     qjsc = subprocess.run(["sh", "-c", "command -v qjsc"], text=True, capture_output=True).stdout.strip()
-    if qjsc:
-        with tempfile.TemporaryDirectory() as directory:
-            for source in sorted((ROOT / "scriptable").glob("*.js")):
+    node = subprocess.run(["sh", "-c", "command -v node"], text=True, capture_output=True).stdout.strip()
+    with tempfile.TemporaryDirectory() as directory:
+        for source in sorted((ROOT / "scriptable").glob("*.js")):
+            if qjsc:
                 run([qjsc, "-m", "-c", "-o", str(Path(directory) / f"{source.stem}.c"), str(source)])
+            elif node:
+                run([node, "--check", str(source)])
+            else:
+                fail("neither qjsc nor node is available for JavaScript syntax checks")
     print("PASS backend and Scriptable syntax/tests")
 
 
 def verify_runtime_and_history() -> None:
-    forbidden = {".env", "sources.json", "tokens.db", "sync.log", "sync.lock", "token-tracker-v2-settings.json"}
+    forbidden = {".env", "sources.json", "tokens.db", "sync.log", "sync.lock", "token-tracker-v2-settings.json", "token-tracker-v3-settings.json"}
     present = [p for p in ROOT.rglob("*") if p.is_file() and p.name in forbidden]
     if present:
         fail("runtime/private files present: " + ", ".join(str(p.relative_to(ROOT)) for p in present))

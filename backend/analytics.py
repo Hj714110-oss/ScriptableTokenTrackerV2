@@ -3,12 +3,12 @@ from datetime import date,datetime,timedelta
 from store import Store
 from config import SOURCES
 
-METRICS="SUM(prompt_tokens+completion_tokens) tokens,SUM(prompt_tokens) prompt_tokens,SUM(completion_tokens) completion_tokens,SUM(cache_tokens) cache_tokens,SUM(cache_creation_tokens) cache_creation_tokens,SUM(cache_basis) cache_basis,COUNT(*) requests,AVG(use_time) avg_latency"
+METRICS="SUM(prompt_tokens+completion_tokens) tokens,SUM(prompt_tokens) prompt_tokens,SUM(completion_tokens) completion_tokens,SUM(cache_tokens) cache_tokens,SUM(cache_creation_tokens) cache_creation_tokens,SUM(cache_basis) cache_basis,SUM(request_count) requests,CASE WHEN SUM(CASE WHEN use_time>0 THEN 1 ELSE 0 END)>0 THEN AVG(CASE WHEN use_time>0 THEN use_time END) ELSE 0 END avg_latency"
 FAMILY_CASE="""CASE
  WHEN lower(model) LIKE 'claude-%' THEN 'Claude'
  WHEN lower(model) LIKE 'gpt-%' OR lower(model) LIKE '%codex%' OR lower(model) GLOB 'o[1-9]-*' THEN 'OpenAI'
  WHEN lower(model) LIKE 'grok-%' THEN 'Grok'
- WHEN lower(model) LIKE 'gemini-%' THEN 'Gemini'
+ WHEN lower(model) LIKE 'gemini-%' OR lower(model) LIKE 'nano banana%' OR lower(model) LIKE 'nano-banana%' THEN 'Gemini'
  WHEN lower(model) LIKE 'deepseek-%' THEN 'DeepSeek'
  WHEN lower(model) LIKE 'glm-%' THEN 'GLM'
  WHEN lower(model) LIKE 'qwen%' THEN 'Qwen'
@@ -27,7 +27,7 @@ def family(model:str)->str:
  if m.startswith("claude-"):return "Claude"
  if m.startswith("gpt-") or "codex" in m or (len(m)>2 and m[0]=="o" and m[1].isdigit() and m[2]=="-"):return "OpenAI"
  if m.startswith("grok-"):return "Grok"
- if m.startswith("gemini-"):return "Gemini"
+ if m.startswith("gemini-") or m.startswith(("nano banana","nano-banana")):return "Gemini"
  if m.startswith("deepseek-"):return "DeepSeek"
  if m.startswith("glm-"):return "GLM"
  if m.startswith("qwen"):return "Qwen"

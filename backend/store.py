@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS logs(date TEXT,tokens INTEGER,source TEXT DEFAULT 'ma
 CREATE TABLE IF NOT EXISTS usage_events(
  event_key TEXT PRIMARY KEY,source TEXT NOT NULL,request_id TEXT NOT NULL,created_at INTEGER NOT NULL,date TEXT NOT NULL,model TEXT NOT NULL,
  prompt_tokens INTEGER NOT NULL DEFAULT 0,completion_tokens INTEGER NOT NULL DEFAULT 0,cache_tokens INTEGER NOT NULL DEFAULT 0,cache_creation_tokens INTEGER NOT NULL DEFAULT 0,cache_basis INTEGER NOT NULL DEFAULT 0,
- token_id INTEGER,token_name TEXT NOT NULL DEFAULT '',channel_id INTEGER,channel_name TEXT NOT NULL DEFAULT '',use_time REAL NOT NULL DEFAULT 0,quota INTEGER NOT NULL DEFAULT 0,is_stream INTEGER NOT NULL DEFAULT 0
+ token_id INTEGER,token_name TEXT NOT NULL DEFAULT '',channel_id INTEGER,channel_name TEXT NOT NULL DEFAULT '',use_time REAL NOT NULL DEFAULT 0,quota INTEGER NOT NULL DEFAULT 0,is_stream INTEGER NOT NULL DEFAULT 0,request_count INTEGER NOT NULL DEFAULT 1
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_usage_source_request ON usage_events(source,request_id);
 CREATE INDEX IF NOT EXISTS idx_usage_date ON usage_events(date);
@@ -35,9 +35,11 @@ class Store:
   if "source" not in cols:return
   if "cache_creation_tokens" not in cols:
    c.execute("ALTER TABLE usage_events ADD COLUMN cache_creation_tokens INTEGER NOT NULL DEFAULT 0")
+  if "request_count" not in cols:
+   c.execute("ALTER TABLE usage_events ADD COLUMN request_count INTEGER NOT NULL DEFAULT 1")
  def date_for(self,ts):return datetime.fromtimestamp(ts,self.tz).date().isoformat()
  def upsert_events(self,events):
-  sql="""INSERT INTO usage_events(event_key,source,request_id,created_at,date,model,prompt_tokens,completion_tokens,cache_tokens,cache_creation_tokens,cache_basis,token_id,token_name,channel_id,channel_name,use_time,quota,is_stream) VALUES(:event_key,:source,:request_id,:created_at,:date,:model,:prompt_tokens,:completion_tokens,:cache_tokens,:cache_creation_tokens,:cache_basis,:token_id,:token_name,:channel_id,:channel_name,:use_time,:quota,:is_stream) ON CONFLICT(event_key) DO UPDATE SET created_at=excluded.created_at,date=excluded.date,model=excluded.model,prompt_tokens=excluded.prompt_tokens,completion_tokens=excluded.completion_tokens,cache_tokens=excluded.cache_tokens,cache_creation_tokens=excluded.cache_creation_tokens,cache_basis=excluded.cache_basis,token_id=excluded.token_id,token_name=excluded.token_name,channel_id=excluded.channel_id,channel_name=excluded.channel_name,use_time=excluded.use_time,quota=excluded.quota,is_stream=excluded.is_stream"""
+  sql="""INSERT INTO usage_events(event_key,source,request_id,created_at,date,model,prompt_tokens,completion_tokens,cache_tokens,cache_creation_tokens,cache_basis,token_id,token_name,channel_id,channel_name,use_time,quota,is_stream,request_count) VALUES(:event_key,:source,:request_id,:created_at,:date,:model,:prompt_tokens,:completion_tokens,:cache_tokens,:cache_creation_tokens,:cache_basis,:token_id,:token_name,:channel_id,:channel_name,:use_time,:quota,:is_stream,:request_count) ON CONFLICT(event_key) DO UPDATE SET created_at=excluded.created_at,date=excluded.date,model=excluded.model,prompt_tokens=excluded.prompt_tokens,completion_tokens=excluded.completion_tokens,cache_tokens=excluded.cache_tokens,cache_creation_tokens=excluded.cache_creation_tokens,cache_basis=excluded.cache_basis,token_id=excluded.token_id,token_name=excluded.token_name,channel_id=excluded.channel_id,channel_name=excluded.channel_name,use_time=excluded.use_time,quota=excluded.quota,is_stream=excluded.is_stream,request_count=excluded.request_count"""
   with self.connect() as c:
    c.executemany(sql,events);return len(events)
  def set_state(self,key,value):

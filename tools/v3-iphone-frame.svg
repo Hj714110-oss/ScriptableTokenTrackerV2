@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="3000" viewBox="0 0 1800 3000">
+ <defs>
+  <filter id="shadow" x="-30%" y="-20%" width="160%" height="160%"><feGaussianBlur stdDeviation="34"/><feColorMatrix values="0 0 0 0 0.03 0 0 0 0 0.025 0 0 0 0 0.02 0 0 0 .48 0"/><feOffset dy="28"/></filter>
+  <linearGradient id="edge" x1="0" x2="1"><stop stop-color="#0d0d0d"/><stop offset=".5" stop-color="#5a5a5a"/><stop offset="1" stop-color="#111"/></linearGradient>
+ </defs>
+ <rect width="1800" height="3000" fill="#f0eadf"/>
+ <path d="M0 430H1800M0 2570H1800" stroke="#dfd5c5" stroke-width="2"/>
+ <g opacity=".3" fill="#c9653a"><rect x="116" y="125" width="14" height="14"/><rect x="140" y="125" width="14" height="14"/><rect x="116" y="149" width="38" height="14"/></g>
+ <rect x="190" y="72" width="1420" height="2870" rx="174" fill="#332f2d" opacity=".45" filter="url(#shadow)"/>
+ <rect x="174" y="50" width="1452" height="2890" rx="170" fill="url(#edge)" stroke="#090909" stroke-width="8"/>
+ <rect x="195" y="71" width="1410" height="2848" rx="150" fill="#050505" stroke="#6a6966" stroke-opacity=".35" stroke-width="3"/>
+ <rect x="245" y="121" width="1310" height="2748" rx="112" fill="#000" stroke="#1d1d1d" stroke-width="4"/>
+ <path d="M174 520h10c8 0 12 8 12 18v184c0 10-4 18-12 18h-10M1626 770h-10c-8 0-12-8-12-18V520c0-10 4-18 12-18h10" fill="none" stroke="#77736d" stroke-opacity=".55" stroke-width="4"/>
+ <path d="M174 1030h10c8 0 12 8 12 18v88c0 10-4 18-12 18h-10M1606 1110h20" fill="none" stroke="#77736d" stroke-opacity=".55" stroke-width="4"/>
+ <g font-family="DejaVu Sans, sans-serif" fill="#756b61"><text x="900" y="2965" text-anchor="middle" font-size="18" letter-spacing="5">TOKEN TRACKER V3 · IOS DEMO MOCKUP</text><text x="900" y="2992" text-anchor="middle" font-size="13" letter-spacing="2">ALL SCREEN VALUES ARE FICTIONAL · PUBLIC PREVIEW</text></g>
+</svg>

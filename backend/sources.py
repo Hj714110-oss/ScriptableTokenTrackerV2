@@ -36,7 +36,7 @@ def to_event(item,store,source):
  cache=int(item.get("cache_read_tokens") or other.get("cache_tokens") or 0)
  creation=int(item.get("cache_creation_tokens") or other.get("cache_creation_tokens") or 0)
  rid=str(item.get("request_id") or "")
- return {"event_key":f"{source}:{rid}","source":source,"request_id":rid,"created_at":ts,"date":store.date_for(ts),"model":model,"prompt_tokens":prompt,"completion_tokens":completion,"cache_tokens":cache,"cache_creation_tokens":creation,"cache_basis":cache_basis(model,prompt,cache),"token_id":item.get("token_id"),"token_name":str(item.get("token_name") or ""),"channel_id":item.get("channel"),"channel_name":str(item.get("channel_name") or ""),"use_time":float(item.get("use_time") or 0),"quota":int(item.get("quota") or 0),"is_stream":1 if item.get("is_stream") else 0}
+ return {"event_key":f"{source}:{rid}","source":source,"request_id":rid,"created_at":ts,"date":store.date_for(ts),"model":model,"prompt_tokens":prompt,"completion_tokens":completion,"cache_tokens":cache,"cache_creation_tokens":creation,"cache_basis":cache_basis(model,prompt,cache),"token_id":item.get("token_id"),"token_name":str(item.get("token_name") or ""),"channel_id":item.get("channel"),"channel_name":str(item.get("channel_name") or ""),"use_time":float(item.get("use_time") or 0),"quota":int(item.get("quota") or 0),"is_stream":1 if item.get("is_stream") else 0,"request_count":1}
 
 class SourceClient:
  def __init__(self,name,env,timeout=25):

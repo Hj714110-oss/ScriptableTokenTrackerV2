@@ -108,6 +108,16 @@ location /token-tracker/ {
 https://your-domain.example/token-tracker/v2
 ```
 
+## V3 客户端
+
+V3 使用同一个聚合后端和 `/token-tracker/v3` 别名；也兼容 `/token-tracker/v2` 返回的 version 3 数据契约。运行 `scriptable/SetupTokenTrackerV3.js`，把你的 HTTPS 地址和客户端 API Key 保存到 Scriptable 本机设置，再添加 7 个 V3 脚本。
+
+```text
+https://your-domain.example/token-tracker/v3
+```
+
+V3 脚本优先读取 `token-tracker-v3-settings.json`，找不到时回退到 `token-tracker-v2-settings.json`。两个设置文件都被 `.gitignore` 排除，切勿把它们复制进仓库。
+
 ## 健康检查
 
 ```bash

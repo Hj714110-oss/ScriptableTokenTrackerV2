@@ -1,12 +1,16 @@
-# Token Tracker V2
+# Token Tracker V3 · Pixel Edition
 
-一套自托管的多数据源 Token 用量分析后端，以及 5 个适用于 iOS [Scriptable](https://scriptable.app/) 的桌面小组件。
+一套自托管的多数据源 Token 用量分析后端，以及兼容 V2 的 Scriptable 小组件套件。
 
-> 下方预览中的来源、模型、数值和时间分布均为完全虚构的演示数据，不包含维护者或用户的真实统计。
+V3 使用 **Cloud Parcel Ledger（云朵邮局）**视觉系统：7 个组件、每个独立适配 Small / Medium / Large，共 21 套布局。V2 文件和数据契约继续保留，已有 V2 部署可以平滑共存。
+
+> 下方是贴近实际 V3 部署的 iPhone 页面 mockup；屏幕中的所有数字、请求数、缓存率和模型用量均为重新编造的虚构演示数据，不代表维护者或用户的真实统计。
 
 <p align="center">
-  <img src="assets/interface-overview.jpg" alt="Token Tracker V2 fictional demo interface overview" width="100%">
+  <img src="assets/v3-interface-overview.png" alt="Token Tracker V3 fictional iPhone mockup" width="720">
 </p>
+
+<p align="center"><sub>Sanitized fictional demo · layout follows the real V3 widget family · no private runtime data</sub></p>
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![Scriptable](https://img.shields.io/badge/iOS-Scriptable-black)
@@ -22,11 +26,14 @@
 - 今日、近 7 天、本月、全部历史聚合
 - 模型归一化、模型家族、Top 排行和趋势
 - 180 日活动热力图、连续使用天数与线性预测
+- V3 提供 7 个独立组件、21 套 Small / Medium / Large 布局
+- 请求数使用事件中的 `request_count` 聚合，不把事件行数当作请求数
+- 响应耗时只对正数 `use_time` 样本做算术平均，不虚构 P95 / P99
 - SQLite 持久化、全量 / 增量同步、网络重试和进程锁
 - 旧 API、V2 API、V3 别名和健康检查
-- Scriptable 本地缓存、亮暗模式、约 5 分钟刷新申请
+- Scriptable 本地缓存、亮暗模式、V2 约 5 分钟 / V3 约 2 分钟刷新申请
 
-## 五个组件
+## V2 五个组件（兼容保留）
 
 | 文件 | 推荐尺寸 | 内容 |
 |---|---|---|
@@ -35,6 +42,20 @@
 | `ModelFocusV2.js` | 小号 | 指定排名模型的 Token、占比、缓存、耗时和趋势 |
 | `UsageRhythmV2.js` | 中号 | 近 7 日用量、均值、峰值和预测 |
 | `ActivityCacheV2.js` | 中号 | 180 日活动、连续天数与缓存效率 |
+
+## V3 七个组件（Pixel Edition）
+
+| 文件 | 推荐尺寸 | 内容 |
+|---|---|---|
+| `TokenOverviewV3.js` | 小 / 中 / 大 | 累计用量、今日、预测、Top 1 / Top 2 和七日节奏 |
+| `ModelRankingV3.js` | 小 / 中 / 大 | 按周期与来源筛选的模型排行 |
+| `ModelFocusV3.js` | 小 / 中 / 大 | 指定排行模型的 Token、占比、缓存和耗时 |
+| `UsageRhythmV3.js` | 小 / 中 / 大 | 七日真实用量、均值、峰值和预测 |
+| `ActivityCacheV3.js` | 小 / 中 / 大 | 180 日活动、连续使用与缓存上下文 |
+| `CacheHealthV3.js` | 小 / 中 / 大 | 缓存读取、创建、计量基数和缓存率 |
+| `ResponsePulseV3.js` | 小 / 中 / 大 | 请求数与正数 `use_time` 样本的算术平均 |
+
+V3 的 `SetupTokenTrackerV3.js` 优先保存 `token-tracker-v3-settings.json`；组件兼容读取旧的 `token-tracker-v2-settings.json`，但任何设置文件都只存在于 Scriptable 本机文档目录。
 
 ## 快速开始
 
@@ -68,12 +89,11 @@ python3 backend/server.py
 ### 2. 配置 Scriptable
 
 1. 从 App Store 安装 Scriptable。
-2. 把 `scriptable/` 下的 6 个 `.js` 文件导入 Scriptable。
-3. 先运行 `SetupTokenTrackerV2.js`。
-4. 输入你的 HTTPS V2 API 地址和 API Key。
-5. 把其余 5 个脚本添加为桌面小组件。
+2. 如使用 V2，运行 `SetupTokenTrackerV2.js` 并导入 V2 组件。
+3. 如使用 V3，运行 `SetupTokenTrackerV3.js`，输入你的 HTTPS API 地址和 API Key。
+4. 把需要的 V3 脚本添加为桌面小组件；每个脚本都独立适配 Small / Medium / Large。
 
-配置只保存在 Scriptable 的本地文档目录，不写入组件源码。
+配置只保存在 Scriptable 的本地文档目录，不写入组件源码。V2 与 V3 可以同时安装；V3 设置优先级高于 V2 设置。
 
 ### 3. 可选 Widget Parameter
 
@@ -97,7 +117,16 @@ month,relay_b
 
 格式为 `排行序号,周期,来源ID`。
 
-## 数据源契约
+V3 的排行、档案、缓存和响应组件沿用同样的参数思路：
+
+```text
+ModelRankingV3.js   → 7d,all
+ModelFocusV3.js     → 1,month,relay_a
+CacheHealthV3.js    → today,all
+ResponsePulseV3.js  → 7d,relay_b
+```
+
+周期支持 `today` / `7d` / `month`；来源使用 `all` 或 `backend/sources.json` 中的来源 ID。
 
 内置 Source Client 面向常见 New API / One API 风格的 `/api/log/self` 日志接口：
 
@@ -105,7 +134,8 @@ month,relay_b
 - 用量日志：`type == 2`
 - 必需字段：`request_id`、`created_at`、`model_name`
 - Token 字段：`prompt_tokens`、`completion_tokens`
-- 可选字段：`cache_read_tokens`、`cache_creation_tokens`、`other.cache_tokens`
+- 可选字段：`cache_read_tokens`、`cache_creation_tokens`、`other.cache_tokens`、`use_time`
+- 每条标准日志写入 `request_count = 1`；聚合时按该字段求和，响应耗时只计算正数 `use_time` 样本
 
 每个来源都在 `backend/sources.json` 中声明 URL、认证类型和凭据环境变量名。示例见 `backend/sources.example.json`。
 
@@ -121,14 +151,14 @@ X-N8N-API-KEY: <TOKEN_API_KEY>
 |---|---|
 | `/`、`/token-tracker` | 兼容旧组件的日汇总 |
 | `/v2`、`/token-tracker/v2` | 完整分析响应 |
-| `/v3`、`/token-tracker/v3` | V2 后续数据契约别名 |
+| `/v3`、`/token-tracker/v3` | V3 完整分析响应 |
 | `/health`、`/token-tracker/health` | 健康状态 |
 
-> 项目名称沿用 V2。响应中的 `version: 3` 表示 V2 数据契约的后续演进，并非另一套产品。
+> `/v3` 与 `/token-tracker/v3` 是 V3 数据契约入口；`/v2` 与 `/token-tracker/v2` 保留为兼容别名。
 
 ## 设计
 
-Warm Ledger 使用暖纸、炭黑和陶土色，基于系统自带 New York / Avenir Next / Menlo 字体，不加载外部资源。公开预览只使用完全虚构的演示数据，不包含维护者或用户的真实统计。
+Cloud Parcel Ledger 使用暖云白、炭黑、陶土橙和低饱和蓝绿，结合系统自带字体、像素角色与正交数据图形；实际运行时由 Scriptable 根据 Small / Medium / Large 独立排版。公开预览使用贴近真实 V3 的 iPhone 页面 mockup，但其中所有数据均为虚构演示。
 
 ## 测试
 
@@ -139,7 +169,7 @@ python3 verify.py
 CI 会检查：
 
 - Python 语法与确定性聚合测试
-- 6 个 Scriptable 脚本语法
+- 14 个 Scriptable 脚本语法
 - 私有地址和硬编码凭据
 - 必需文档与部署文件
 
