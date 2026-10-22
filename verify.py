@@ -37,8 +37,16 @@ EXPECTED_WIDGETS = {
     "ActivityCacheV4.js",
     "CacheHealthV4.js",
     "ResponsePulseV4.js",
+    "SetupTokenTrackerV5.js",
+    "TokenOverviewV5.js",
+    "ModelRankingV5.js",
+    "ModelFocusV5.js",
+    "UsageRhythmV5.js",
+    "ActivityCacheV5.js",
+    "CacheHealthV5.js",
+    "ResponsePulseV5.js",
 }
-ALLOWED_HOSTS = {"github.com", "scriptable.app", "img.shields.io", "example.com", "relay.example.com", "api.example.com", "your-domain.example", "127.0.0.1", "www.w3.org"}
+ALLOWED_HOSTS = {"github.com", "scriptable.app", "img.shields.io", "example.com", "relay.example.com", "api.example.com", "your-domain.example", "127.0.0.1", "www.w3.org", "claude.ai", "claude.com"}
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>`)]+")
 IP_PATTERN = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 SECRETISH = re.compile(r"(?i)(?:api[_-]?key|access[_-]?token|secret|password|session|authorization)\s*[:=]\s*[\"']?([^\s\"',}]+)")
@@ -86,7 +94,8 @@ def scan_text(label: str, text: str, private_hashes: set[str]) -> list[str]:
     for match in SECRETISH.finditer(text):
         value = match.group(1).strip()
         low = value.lower()
-        if not value or any(part.lower() in low for part in PLACEHOLDER_PARTS) or value.startswith(("TOKEN_", "RELAY_")):
+        # URLs are checked by host above (e.g. the "Claude-Session: https://claude.ai/..." commit trailer), not as credentials
+        if not value or any(part.lower() in low for part in PLACEHOLDER_PARTS) or value.startswith(("TOKEN_", "RELAY_", "http://", "https://")):
             continue
         if len(value) >= 16:
             findings.append(f"{label}: possible hard-coded credential")
@@ -125,17 +134,19 @@ def verify_demo_is_fictional() -> None:
     print("PASS preview is explicitly fictional")
 
 
-def verify_v4_build() -> None:
-    """The seven V4 widgets must be exactly what tools/build_v4.py generates from src/v4/core.js."""
-    before = {p.name: p.read_text() for p in (ROOT / "scriptable").glob("*V4.js") if p.name != "SetupTokenTrackerV4.js"}
-    run([sys.executable, str(ROOT / "tools" / "build_v4.py")], ROOT)
-    after = {p.name: p.read_text() for p in (ROOT / "scriptable").glob("*V4.js") if p.name != "SetupTokenTrackerV4.js"}
-    if before != after:
-        fail("V4 widgets are out of date: run python3 tools/build_v4.py and commit the result")
-    core = (ROOT / "src" / "v4" / "core.js").read_text()
-    if core.index("/* ============================== entry") < core.index("const Pulse = {"):
-        fail("V4 entry code must come after the view definitions")
-    print("PASS V4 widgets match src/v4/core.js")
+def verify_generated_builds() -> None:
+    """The V4 and V5 widgets must be exactly what tools/build_v4.py / build_v5.py generate from src/v4|v5/core.js."""
+    for ver in ("v4", "v5"):
+        tag = ver.upper()
+        files = lambda: {p.name: p.read_text() for p in (ROOT / "scriptable").glob(f"*{tag}.js") if p.name != f"SetupTokenTracker{tag}.js"}
+        before = files()
+        run([sys.executable, str(ROOT / "tools" / f"build_{ver}.py")], ROOT)
+        if before != files():
+            fail(f"{tag} widgets are out of date: run python3 tools/build_{ver}.py and commit the result")
+        core = (ROOT / "src" / ver / "core.js").read_text()
+        if core.index("/* ============================== entry") < core.index("const Pulse = {"):
+            fail(f"{tag} entry code must come after the view definitions")
+        print(f"PASS {tag} widgets match src/{ver}/core.js")
 
 
 def verify_code() -> None:
@@ -158,7 +169,7 @@ def verify_code() -> None:
 
 
 def verify_runtime_and_history() -> None:
-    forbidden = {".env", "sources.json", "tokens.db", "sync.log", "sync.lock", "token-tracker-v2-settings.json", "token-tracker-v3-settings.json", "token-tracker-v4-settings.json", "token-tracker-v4-cache.json"}
+    forbidden = {".env", "sources.json", "tokens.db", "sync.log", "sync.lock", "token-tracker-v2-settings.json", "token-tracker-v3-settings.json", "token-tracker-v4-settings.json", "token-tracker-v4-cache.json", "token-tracker-v5-settings.json", "token-tracker-v5-cache.json"}
     present = [p for p in ROOT.rglob("*") if p.is_file() and p.name in forbidden]
     if present:
         fail("runtime/private files present: " + ", ".join(str(p.relative_to(ROOT)) for p in present))
@@ -176,7 +187,7 @@ def main() -> None:
     verify_demo_is_fictional()
     verify_runtime_and_history()
     verify_code()
-    verify_v4_build()
+    verify_generated_builds()
     print("ALL PUBLIC RELEASE GATES OK")
 
 

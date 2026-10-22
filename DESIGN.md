@@ -1,6 +1,30 @@
 # Token Tracker Design
 
-## V4 · Atelier (current)
+## V5 · 纸与墨 Paper & Ink (current)
+
+**Direction.** A token ledger kept on paper. Serif numbers, a pen that marks *today*, hatched past days, ink dots for activity, dotted leaders in a ranking that reads like an account book, and an original pixel paper crane that shows the sync state.
+
+| Role | Day | Night |
+|---|---|---|
+| Paper | `#FAF9F5` + 22 pt ruled lines at 3.5 % ink | `#1E1D1B` + lines at 3 % |
+| Ink / sub / faint | `#141413` / `#5E5D59` / `#7A7872` | `#F0EEE6` / `#A6A39B` / `#7D7A73` |
+| Today (marks / text) | clay `#D97757` / `#A4492A` | `#E08A6A` / `#E8957A` |
+| Cache · latency · projection | sage `#3F6B4C` · indigo `#34509A` · amber `#B07A22` | `#8DB99A` · `#9AACEF` · `#E6B865` |
+
+**Type.**
+- Georgia for numbers and italic notes; Songti SC for Chinese titles.
+- The system sans for labels, and system mono for ledger digits.
+
+**Model icons.**
+- **Slot:** a round slot per model family that shows the user's own image from `TokenTracker/icons/`.
+- **Default:** without an image, an initial stamp in the family colour.
+- **Public images:** they only ever show the stamps.
+
+**Public imagery.** Everything under `assets/v5/` is rendered from the real scripts on fictional data.
+
+---
+
+## V4 · Atelier
 
 **Direction.** A quiet ledger: warm paper, deep ink and one accent. The numbers are the hero. Ornament exists only where it carries data: a ring for a ratio, a glow on *today*, a hatched bar for a projection.
 

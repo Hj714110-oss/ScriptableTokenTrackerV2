@@ -1,7 +1,8 @@
-// node tools/v4/preview/render.js  -> tools/v4/preview/out/<widget>-<family>-<theme>.png   (renders the real built scripts on fictional data)
+// TT_VERSION=V5 node tools/v4/preview/render.js [filter]  -> tools/v4/preview/out/<widget>-<family>-<theme>.png   (renders the real built scripts on fictional data)
 const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '../../..'), OUT = path.join(__dirname, 'out'); fs.mkdirSync(OUT, { recursive: true });
-const W = [['TokenOverviewV4', ''], ['ModelRankingV4', '7d,all'], ['ModelFocusV4', '1,today,all'], ['UsageRhythmV4', ''], ['ActivityCacheV4', ''], ['CacheHealthV4', 'today,all'], ['ResponsePulseV4', 'today,all']];
+const V = process.env.TT_VERSION || 'V4';
+const W = [['TokenOverview', ''], ['ModelRanking', '7d,all'], ['ModelFocus', '1,today,all'], ['UsageRhythm', ''], ['ActivityCache', ''], ['CacheHealth', 'today,all'], ['ResponsePulse', 'today,all']].map(([n, p]) => [n + V, p]);
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage(); p.on('pageerror', e => console.log('PAGEERR', e.message)); p.on('console', m => { if (m.type() === 'error') console.log('console:', m.text()); });
   const font = f => `@font-face{font-family:"JetBrains Mono";src:url(data:font/woff2;base64,${fs.readFileSync(f).toString('base64')}) format("woff2");font-weight:100 900}`;
@@ -9,7 +10,7 @@ const W = [['TokenOverviewV4', ''], ['ModelRankingV4', '7d,all'], ['ModelFocusV4
   await p.setContent(`<html><head><style>${font(jb)}</style></head><body></body></html>`);
   await p.addScriptTag({ path: path.join(__dirname, 'shim.js') });
   await p.evaluate(d => { window.__DEMO = d; }, JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/v4/demo_payload.json'), 'utf8')));
-  await p.evaluate(async () => { for (const f of ['400 30px Inter', '500 30px Inter', '600 30px Inter', '700 30px Inter', '700 30px "Inter Display"', '600 30px "Inter Display"', '500 30px "JetBrains Mono"', '500 30px "Noto Sans CJK SC"', '600 30px "Noto Sans CJK SC"']) await document.fonts.load(f); });
+  await p.evaluate(async () => { for (const f of ['400 30px Inter', '500 30px Inter', '600 30px Inter', '700 30px Inter', '700 30px "Inter Display"', '600 30px "Inter Display"', '500 30px "JetBrains Mono"', '500 30px "Noto Sans CJK SC"', '600 30px "Noto Sans CJK SC"', '400 30px "Noto Serif CJK SC"', '700 30px "Noto Serif CJK SC"', 'italic 400 30px "Noto Serif CJK SC"']) await document.fonts.load(f); });
   const only = process.argv[2];
   for (const [name, param] of W) { if (only && !name.includes(only)) continue; const code = fs.readFileSync(path.join(ROOT, 'scriptable', name + '.js'), 'utf8');
     for (const fam of ['small', 'medium', 'large']) for (const dark of [false, true]) {

@@ -3,7 +3,9 @@
 const SCALE = 3;
 class Color { constructor(hex, a = 1) { hex = String(hex).replace("#", ""); if (hex.length === 3) hex = hex.split("").map(x => x + x).join(""); this.hex = hex; this.alpha = a; const n = parseInt(hex.slice(0, 6), 16); this.css = `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; } static dynamic(l, d) { return window.__DARK ? d : l; } }
 const W8 = { regular: 400, medium: 500, semibold: 600, bold: 700, heavy: 800 };
-class Font { constructor(name, size) { this.size = size; this.css = `400 ${size * SCALE}px ${/Menlo|Mono/i.test(name) ? '"JetBrains Mono"' : '"Inter", "Noto Sans CJK SC"'}`; } }
+class Font { constructor(name, size) { this.size = size; const n = String(name), w = /Bold|Black/.test(n) ? 700 : /Semibold|Medium/.test(n) ? 600 : 400, it = /Italic/.test(n) ? "italic " : "";
+  const fam = /Georgia|Songti|Serif|Times|Charter/i.test(n) ? '"Noto Serif CJK SC", serif' : /Menlo|Mono/i.test(n) ? '"JetBrains Mono"' : '"Inter", "Noto Sans CJK SC"';
+  this.css = `${it}${w} ${size * SCALE}px ${fam}`; } }
 for (const [k, w] of Object.entries(W8)) {
   const cap = k[0].toUpperCase() + k.slice(1);
   Font[`${k}SystemFont`] = s => Object.assign(new Font("SF", s), { css: `${w} ${s * SCALE}px "Inter", "Noto Sans CJK SC"` });
@@ -40,8 +42,9 @@ class DrawContext {
 }
 class ListWidget { setPadding() { } addSpacer() { } addText() { return {}; } addStack() { return new ListWidget(); } async presentSmall() { } async presentMedium() { } async presentLarge() { } }
 const Device = { isUsingDarkAppearance: () => window.__DARK, screenSize: () => ({ width: 393, height: 852 }) };
-const FileManager = { local: () => ({ documentsDirectory: () => "/docs", joinPath: (a, b) => `${a}/${b}`, fileExists: p => p.endsWith("token-tracker-v4-settings.json"),
-  readString: p => JSON.stringify({ apiUrl: "https://example.com/token-tracker/v3", apiKey: "demo-preview" }), writeString() { } }) };
+const FM = () => ({ documentsDirectory: () => "/docs", joinPath: (a, b) => `${a}/${b}`, fileExists: p => /token-tracker-v[45]-settings\.json$/.test(p),
+  readString: p => JSON.stringify({ apiUrl: "https://example.com/token-tracker/v3", apiKey: "demo-preview" }), writeString() { }, readImage() { return null; }, isFileStoredIniCloud: () => false, isFileDownloaded: () => true });
+const FileManager = { local: FM, iCloud: FM };
 class Request { constructor(u) { this.url = u; } async loadJSON() { return JSON.parse(JSON.stringify(window.__DEMO)); } }
 window.renderWidget = async (code, family, param, dark) => {
   window.__DARK = dark; let out = null;
