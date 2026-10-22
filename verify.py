@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import ipaddress
 import os
 import re
@@ -28,6 +29,14 @@ EXPECTED_WIDGETS = {
     "ActivityCacheV3.js",
     "CacheHealthV3.js",
     "ResponsePulseV3.js",
+    "SetupTokenTrackerV4.js",
+    "TokenOverviewV4.js",
+    "ModelRankingV4.js",
+    "ModelFocusV4.js",
+    "UsageRhythmV4.js",
+    "ActivityCacheV4.js",
+    "CacheHealthV4.js",
+    "ResponsePulseV4.js",
 }
 ALLOWED_HOSTS = {"github.com", "scriptable.app", "img.shields.io", "example.com", "relay.example.com", "api.example.com", "your-domain.example", "127.0.0.1", "www.w3.org"}
 URL_PATTERN = re.compile(r"https?://[^\s\"'<>`)]+")
@@ -110,7 +119,23 @@ def verify_demo_is_fictional() -> None:
         fail("demo preview is not explicitly marked as fictional")
     if "ALL VALUES ARE FICTIONAL" not in screen or "PUBLIC DEMO ONLY" not in screen:
         fail("V3 screen preview is not explicitly marked as fictional")
+    payload = json.loads((ROOT / "tools" / "v4" / "demo_payload.json").read_text())
+    if payload.get("meta", {}).get("fictional") != "ALL VALUES ARE FICTIONAL · PUBLIC DEMO ONLY":
+        fail("V4 demo payload is not marked as fictional")
     print("PASS preview is explicitly fictional")
+
+
+def verify_v4_build() -> None:
+    """The seven V4 widgets must be exactly what tools/build_v4.py generates from src/v4/core.js."""
+    before = {p.name: p.read_text() for p in (ROOT / "scriptable").glob("*V4.js") if p.name != "SetupTokenTrackerV4.js"}
+    run([sys.executable, str(ROOT / "tools" / "build_v4.py")], ROOT)
+    after = {p.name: p.read_text() for p in (ROOT / "scriptable").glob("*V4.js") if p.name != "SetupTokenTrackerV4.js"}
+    if before != after:
+        fail("V4 widgets are out of date: run python3 tools/build_v4.py and commit the result")
+    core = (ROOT / "src" / "v4" / "core.js").read_text()
+    if core.index("/* ============================== entry") < core.index("const Pulse = {"):
+        fail("V4 entry code must come after the view definitions")
+    print("PASS V4 widgets match src/v4/core.js")
 
 
 def verify_code() -> None:
@@ -133,7 +158,7 @@ def verify_code() -> None:
 
 
 def verify_runtime_and_history() -> None:
-    forbidden = {".env", "sources.json", "tokens.db", "sync.log", "sync.lock", "token-tracker-v2-settings.json", "token-tracker-v3-settings.json"}
+    forbidden = {".env", "sources.json", "tokens.db", "sync.log", "sync.lock", "token-tracker-v2-settings.json", "token-tracker-v3-settings.json", "token-tracker-v4-settings.json", "token-tracker-v4-cache.json"}
     present = [p for p in ROOT.rglob("*") if p.is_file() and p.name in forbidden]
     if present:
         fail("runtime/private files present: " + ", ".join(str(p.relative_to(ROOT)) for p in present))
@@ -151,6 +176,7 @@ def main() -> None:
     verify_demo_is_fictional()
     verify_runtime_and_history()
     verify_code()
+    verify_v4_build()
     print("ALL PUBLIC RELEASE GATES OK")
 
 

@@ -1,188 +1,139 @@
-# Token Tracker V3 · Pixel Edition
+<p align="center"><img src="assets/v4/hero.png" alt="Token Tracker V4 · Atelier — light and dark home screens (fictional demo data)" width="100%"></p>
 
-一套自托管的多数据源 Token 用量分析后端，以及兼容 V2 的 Scriptable 小组件套件。
-
-V3 使用 **Cloud Parcel Ledger（云朵邮局）**视觉系统：7 个组件、每个独立适配 Small / Medium / Large，共 21 套布局。V2 文件和数据契约继续保留，已有 V2 部署可以平滑共存。
-
-> 下方是贴近实际 V3 部署的 iPhone 页面 mockup；屏幕中的所有数字、请求数、缓存率和模型用量均为重新编造的虚构演示数据，不代表维护者或用户的真实统计。
+<h1 align="center">Token Tracker · V4 Atelier</h1>
 
 <p align="center">
-  <img src="assets/v3-interface-overview.png" alt="Token Tracker V3 fictional iPhone mockup" width="720">
+一套自托管的多来源 Token 用量后端，配一组为 iPhone 桌面认真设计过的 Scriptable 小组件。<br>
+<sub>A self-hosted, multi-source token ledger with seven carefully designed iOS widgets.</sub>
 </p>
 
-<p align="center"><sub>Sanitized fictional demo · layout follows the real V3 widget family · no private runtime data</sub></p>
+<p align="center">
+<img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white" alt="Python">
+<img src="https://img.shields.io/badge/iOS-Scriptable-1C1A17" alt="Scriptable">
+<img src="https://github.com/Hj714110-oss/ScriptableTokenTrackerV2/actions/workflows/ci.yml/badge.svg" alt="CI">
+<img src="https://img.shields.io/badge/license-MIT-D2693F" alt="License">
+</p>
 
-![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
-![Scriptable](https://img.shields.io/badge/iOS-Scriptable-black)
-![CI](https://github.com/Hj714110-oss/ScriptableTokenTrackerV2/actions/workflows/ci.yml/badge.svg)
-![License](https://img.shields.io/badge/license-MIT-A95134)
+<p align="center"><sub>图中所有数字都来自 <code>tools/v4/demo_payload.json</code>，是用真实分析代码跑出的<b>虚构演示数据</b>，不代表任何真实用量。<br>Every value shown is fictional: synthetic events run through the real analytics.</sub></p>
 
-## 功能
+---
 
-- 多中转 / 多来源合并统计与来源独立筛选
-- `source + request_id` 幂等去重
-- 总 Token 口径为 `prompt_tokens + completion_tokens`
-- 缓存读取与缓存创建 Token 单独统计，不重复计入总量
-- 今日、近 7 天、本月、全部历史聚合
-- 模型归一化、模型家族、Top 排行和趋势
-- 180 日活动热力图、连续使用天数与线性预测
-- V3 提供 7 个独立组件、21 套 Small / Medium / Large 布局
-- 请求数使用事件中的 `request_count` 聚合，不把事件行数当作请求数
-- 响应耗时只对正数 `use_time` 样本做算术平均，不虚构 P95 / P99
-- SQLite 持久化、全量 / 增量同步、网络重试和进程锁
-- 旧 API、V2 API、V3 别名和健康检查
-- Scriptable 本地缓存、亮暗模式、V2 约 5 分钟 / V3 约 2 分钟刷新申请
+## V4 · Atelier
 
-## V2 五个组件（兼容保留）
+V4 是一次彻底的视觉重做：
+- **一张画布：**每个组件都画成一整张图（DrawContext 满幅绘制），排版、细线、圆环和图表都落在设计好的位置上。
+- **三档尺寸：**7 个组件 × Small / Medium / Large，共 21 套独立布局。
+- **亮暗双色：**亮色和暗色各有一套调色。
 
-| 文件 | 推荐尺寸 | 内容 |
+| | |
+|---|---|
+| **纸面与墨色** | 暖纸白 `#F6F3EE` / 深墨 `#141311`，正文墨色与三档灰阶；不用玻璃、不用大面积渐变。 |
+| **一种主色** | 陶土橙 `#D2693F` 只用来标出「今天」和最重要的那个数。缓存用鼠尾草绿，请求与耗时用靛蓝，预测用琥珀，排名依次轮换。 |
+| **大数字** | SF Pro Rounded 粗体做主数字，长数字自动缩小，不截断；SF Mono 做表格数字，列对得齐。 |
+| **图形** | 圆角柱、细线面积图（纵向渐隐）、圆环进度、180 天活动日历；今天的数据会带一点柔光。 |
+| **诚实的状态** | 实时 / 缓存 / 稍旧 / 离线都会写出来；空数据和错误也有专门的画面。 |
+
+<p align="center"><img src="assets/v4/gallery-light.png" alt="All 21 V4 layouts, light (fictional data)" width="49%"> <img src="assets/v4/gallery-dark.png" alt="All 21 V4 layouts, dark (fictional data)" width="49%"></p>
+
+### 七个组件
+
+| 脚本 | 内容 | Widget Parameter |
 |---|---|---|
-| `TokenOverviewV2.js` | 小 / 中 / 大自适应 | 至今累计、今日、预测、Top 模型和 7 日节奏 |
-| `ModelRankingV2.js` | 中号 | 周期与来源可筛选的模型 Top 3 |
-| `ModelFocusV2.js` | 小号 | 指定排名模型的 Token、占比、缓存、耗时和趋势 |
-| `UsageRhythmV2.js` | 中号 | 近 7 日用量、均值、峰值和预测 |
-| `ActivityCacheV2.js` | 中号 | 180 日活动、连续天数与缓存效率 |
+| `TokenOverviewV4.js` | 今日用量、较 7 日均值、达成预计的圆环、30 天走势、Top 3 | — |
+| `ModelRankingV4.js` | 模型排行、占比色条、每个模型的 7 日迷你曲线 | `7d,all` |
+| `ModelFocusV4.js` | 单个模型的档案：占比圆环、Token、请求、缓存、耗时、7 日柱 | `1,today,all` |
+| `UsageRhythmV4.js` | 7 日真实用量、日均虚线、今日预计斜纹、30 天轮廓 | — |
+| `ActivityCacheV4.js` | 180 天活动日历、连续 / 最长 / 活跃天数 | — |
+| `CacheHealthV4.js` | 缓存命中圆环、读取 / 创建 / 计量基数、7 日命中率 | `today,all` |
+| `ResponsePulseV4.js` | 平均响应耗时、每日请求与耗时 | `7d,all` |
 
-## V3 七个组件（Pixel Edition）
+参数的格式是 `[排名,]周期,来源`。周期可选 `today` / `7d` / `month`，来源填 `all` 或 `backend/sources.json` 里的来源 ID，顺序随意。
 
-| 文件 | 推荐尺寸 | 内容 |
-|---|---|---|
-| `TokenOverviewV3.js` | 小 / 中 / 大 | 累计用量、今日、预测、Top 1 / Top 2 和七日节奏 |
-| `ModelRankingV3.js` | 小 / 中 / 大 | 按周期与来源筛选的模型排行 |
-| `ModelFocusV3.js` | 小 / 中 / 大 | 指定排行模型的 Token、占比、缓存和耗时 |
-| `UsageRhythmV3.js` | 小 / 中 / 大 | 七日真实用量、均值、峰值和预测 |
-| `ActivityCacheV3.js` | 小 / 中 / 大 | 180 日活动、连续使用与缓存上下文 |
-| `CacheHealthV3.js` | 小 / 中 / 大 | 缓存读取、创建、计量基数和缓存率 |
-| `ResponsePulseV3.js` | 小 / 中 / 大 | 请求数与正数 `use_time` 样本的算术平均 |
+### 安装
 
-V3 的 `SetupTokenTrackerV3.js` 优先保存 `token-tracker-v3-settings.json`；组件兼容读取旧的 `token-tracker-v2-settings.json`，但任何设置文件都只存在于 Scriptable 本机文档目录。
+1. 从 App Store 安装 **Scriptable**。
+2. 把 `scriptable/SetupTokenTrackerV4.js` 导入 Scriptable 并运行一次，填写 API 地址和 API Key。设置只保存在本机，V4 也会读取已有的 V3 / V2 设置。
+3. 导入需要的 `*V4.js` 脚本，长按桌面添加 Scriptable 小组件，选择对应脚本即可。尺寸可以随意选。
 
-## 快速开始
+V2 / V3 的脚本、接口和设置都原样保留，可以和 V4 同时使用。
 
-### 1. 部署后端
+---
+
+## 后端
+
+- 多中转 / 多来源合并统计，也可以单独筛选某个来源；按 `source + request_id` 幂等去重。
+- 主 Token = `prompt_tokens + completion_tokens`；缓存读取与缓存创建单独统计，不计入主 Token。
+- 请求数是 `request_count` 的总和；响应耗时只对正数 `use_time` 样本取算术平均，不虚构 P95 / P99。
+- 提供今日、近 7 天、本月和全部历史的聚合，以及模型归一化与家族、180 天活动、连续天数和线性预测。
+- SQLite 持久化，支持全量 / 增量同步、网络重试和进程锁。
 
 ```bash
 git clone https://github.com/Hj714110-oss/ScriptableTokenTrackerV2.git
 cd ScriptableTokenTrackerV2
 cp backend/.env.example backend/.env
-cp backend/sources.example.json backend/sources.json
+cp backend/sources.example.json backend/sources.json   # 填写来源与凭据环境变量名
+
+cd deploy && docker compose up -d --build              # 或：直接用 Python 运行，见 docs/DEPLOYMENT.md
 ```
 
-编辑 `backend/.env` 和 `backend/sources.json`，然后选择：
+内置的 Source Client 面向 New API / One API 风格的 `/api/log/self` 接口（分页 `success + data.total + data.items`，用量日志 `type == 2`）。详细说明见 [部署文档](docs/DEPLOYMENT.md)。
 
-```bash
-# Docker Compose
-cd deploy
-docker compose up -d --build
+### API
 
-# 或直接运行
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r backend/requirements.txt
-set -a; . backend/.env; set +a
-python3 backend/sync.py full
-python3 backend/server.py
-```
-
-详细步骤见 [部署文档](docs/DEPLOYMENT.md)。
-
-### 2. 配置 Scriptable
-
-1. 从 App Store 安装 Scriptable。
-2. 如使用 V2，运行 `SetupTokenTrackerV2.js` 并导入 V2 组件。
-3. 如使用 V3，运行 `SetupTokenTrackerV3.js`，输入你的 HTTPS API 地址和 API Key。
-4. 把需要的 V3 脚本添加为桌面小组件；每个脚本都独立适配 Small / Medium / Large。
-
-配置只保存在 Scriptable 的本地文档目录，不写入组件源码。V2 与 V3 可以同时安装；V3 设置优先级高于 V2 设置。
-
-### 3. 可选 Widget Parameter
-
-`ModelRankingV2.js`：
-
-```text
-today,all
-7d,relay_a
-month,relay_b
-```
-
-格式为 `周期,来源ID`。周期支持 `today` / `7d` / `month`。
-
-`ModelFocusV2.js`：
-
-```text
-1,today,all
-2,7d,relay_a
-1,month,relay_b
-```
-
-格式为 `排行序号,周期,来源ID`。
-
-V3 的排行、档案、缓存和响应组件沿用同样的参数思路：
-
-```text
-ModelRankingV3.js   → 7d,all
-ModelFocusV3.js     → 1,month,relay_a
-CacheHealthV3.js    → today,all
-ResponsePulseV3.js  → 7d,relay_b
-```
-
-周期支持 `today` / `7d` / `month`；来源使用 `all` 或 `backend/sources.json` 中的来源 ID。
-
-内置 Source Client 面向常见 New API / One API 风格的 `/api/log/self` 日志接口：
-
-- 分页响应：`success` + `data.total` + `data.items`
-- 用量日志：`type == 2`
-- 必需字段：`request_id`、`created_at`、`model_name`
-- Token 字段：`prompt_tokens`、`completion_tokens`
-- 可选字段：`cache_read_tokens`、`cache_creation_tokens`、`other.cache_tokens`、`use_time`
-- 每条标准日志写入 `request_count = 1`；聚合时按该字段求和，响应耗时只计算正数 `use_time` 样本
-
-每个来源都在 `backend/sources.json` 中声明 URL、认证类型和凭据环境变量名。示例见 `backend/sources.example.json`。
-
-## API
-
-所有接口使用请求头：
-
-```http
-X-N8N-API-KEY: <TOKEN_API_KEY>
-```
+所有请求都带请求头 `X-N8N-API-KEY: <TOKEN_API_KEY>`。
 
 | 路径 | 说明 |
 |---|---|
-| `/`、`/token-tracker` | 兼容旧组件的日汇总 |
-| `/v2`、`/token-tracker/v2` | 完整分析响应 |
-| `/v3`、`/token-tracker/v3` | V3 完整分析响应 |
+| `/v3`、`/token-tracker/v3` | 完整分析数据（V3 与 V4 组件都使用这个入口） |
+| `/v2`、`/token-tracker/v2` | 兼容别名 |
+| `/`、`/token-tracker` | 旧组件的日汇总 |
 | `/health`、`/token-tracker/health` | 健康状态 |
 
-> `/v3` 与 `/token-tracker/v3` 是 V3 数据契约入口；`/v2` 与 `/token-tracker/v2` 保留为兼容别名。
+---
 
-## 设计
+## 开发
 
-Cloud Parcel Ledger 使用暖云白、炭黑、陶土橙和低饱和蓝绿，结合系统自带字体、像素角色与正交数据图形；实际运行时由 Scriptable 根据 Small / Medium / Large 独立排版。公开预览使用贴近真实 V3 的 iPhone 页面 mockup，但其中所有数据均为虚构演示。
-
-## 测试
-
-```bash
-python3 verify.py
+```text
+src/v4/core.js            V4 唯一的源码：设计令牌、绘图原语、七个视图 × 三个尺寸
+tools/build_v4.py         由 core.js 生成七个独立的 scriptable/*V4.js（改 core，再构建）
+tools/v4/demo_payload.py  用真实 analytics 跑合成事件，生成虚构演示数据
+tools/v4/preview/         在 Chromium 里模拟 Scriptable 的 DrawContext，渲染真实脚本，并合成 README 图片
 ```
 
-CI 会检查：
+```bash
+python3 tools/build_v4.py                    # 生成 V4 组件
+python3 tools/v4/demo_payload.py             # 生成虚构演示数据
+node tools/v4/preview/render.js              # 渲染 42 张预览（7 组件 × 3 尺寸 × 亮/暗，需要 playwright）
+python3 tools/v4/preview/compose.py          # 合成 assets/v4 下的首页图和全景图
+python3 verify.py                            # 发布前检查
+```
 
-- Python 语法与确定性聚合测试
-- 14 个 Scriptable 脚本语法
-- 私有地址和硬编码凭据
-- 必需文档与部署文件
+预览图由真实脚本渲染，字体用 Inter / JetBrains Mono / Noto Sans CJK 替代 SF Pro 和苹方，所以和手机上的效果会有细微差别。
+
+`verify.py` 和 CI 会检查以下几项：
+- Python 语法与确定性聚合测试；
+- 全部 Scriptable 脚本的语法；
+- V4 组件与 `src/v4/core.js` 是否一致；
+- 演示数据是否标为虚构；
+- 代码和 Git 历史里是否出现私有地址或硬编码凭据。
 
 ## 安全
 
-- 不要把 `.env`、`sources.json`、数据库或 Scriptable 本地设置文件提交到 Git。
-- 公网部署应在反向代理后启用 HTTPS。
-- 使用长随机 API Key，并定期轮换中转访问凭据。
-- 安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
+- 不要把 `.env`、`sources.json`、数据库，或 Scriptable 本地的设置和缓存文件提交到 Git。
+- 公网部署时请在反向代理后启用 HTTPS，使用足够长的随机 API Key，并定期轮换中转凭据。
+- 发现安全问题，请按 [SECURITY.md](SECURITY.md) 私下报告。
+
+## 版本
+
+| 版本 | 视觉 | 文件 |
+|---|---|---|
+| **V4 · Atelier** | 纸面、墨色和一种主色，每个组件画成一整张图 | `*V4.js` · [设计说明](DESIGN.md) · [V4 文档](docs/V4.md) |
+| V3 · Pixel Edition | 云朵邮局像素风 | `*V3.js` · [V3 文档](docs/V3.md) |
+| V2 | 初版五组件 | `*V2.js` |
 
 ## 来源说明
 
-本项目是在分析 Token 用量组件这一问题空间后形成的独立 V2 实现。产品方向最初受到 [DaleXiao/ScriptableTokenWidgets](https://github.com/DaleXiao/ScriptableTokenWidgets) 启发；本仓库没有复制其源文件。感谢原作者公开展示 Scriptable Token 小组件的思路。
+本项目最初受 [DaleXiao/ScriptableTokenWidgets](https://github.com/DaleXiao/ScriptableTokenWidgets) 启发，是一个独立实现，没有复制其源文件。感谢原作者公开分享 Scriptable Token 小组件的思路。
 
 ## License
 

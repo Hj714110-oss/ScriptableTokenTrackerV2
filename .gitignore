@@ -16,3 +16,7 @@ sync.lock
 !.env.example
 token-tracker-v2-settings.json
 token-tracker-v3-settings.json
+
+# V4 preview renders (regenerate with tools/v4/preview/render.js)
+tools/v4/preview/out/
+node_modules/
